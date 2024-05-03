@@ -9,3 +9,4 @@ yfinance
 ta
 features
 hopsworks
+polygon-api-client
