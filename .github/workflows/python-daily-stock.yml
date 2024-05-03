@@ -4,12 +4,15 @@
 name: Python application
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '30 5 * * *'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
