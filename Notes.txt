@@ -1,0 +1,11 @@
+Step 3: Implement the Pipelines
+
+Automation: Consider using workflow orchestration tools like Apache Airflow, Prefect, or Luigi to automate the pipelines. This includes scheduling tasks, managing dependencies, and handling failures.
+
+
+Step 4: Testing and Validation
+
+
+
+Things to do:
+- Remove time zones from dataset
