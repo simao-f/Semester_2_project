@@ -5,10 +5,8 @@ from hsml.schema import Schema
 import joblib
 import numpy as np
 import pandas as pd
-import json
-import requests
 from sklearn.model_selection import cross_val_score
-import api_keys as api_keys
+
 import polygon 
 import hopsworks
 from datetime import datetime
