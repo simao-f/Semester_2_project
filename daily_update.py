@@ -73,9 +73,12 @@ if __name__ == '__main__':
         #check if 15 seconds have passed if not wait until 15 seconds have passed
         #to avoid rate limiting of the API
         end_time = time.time()
-        if end_time - start_time < 15:
-            waiting_time = 15 - (end_time - start_time)
+        if end_time - start_time < 13:
+            waiting_time = 13 - (end_time - start_time)
+            
+            print(f"Waiting for {waiting_time} seconds")
             time.sleep(waiting_time)
+            start_time = time.time()
             print(f"Waiting for {waiting_time} seconds")
         update_model_with_fresh_data(df)
         
