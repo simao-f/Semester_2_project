@@ -25,7 +25,7 @@ from sklearn.metrics import mean_squared_error
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
-
+import datetime
 
 import os
 from dotenv import load_dotenv
@@ -45,7 +45,7 @@ def get_stock_from_api(stocksymbol):
     start_date = end_date.replace(year=end_date.year - 1)  # Fetching last year's data
 
     # Fetch aggregates
-    response = client.get_aggs(stocksymbol, 7, 'day', start_date, end_date)
+    response = client.get_aggs(stocksymbol, 1, 'day', start_date, end_date)
     
     df = pd.DataFrame(response)
     

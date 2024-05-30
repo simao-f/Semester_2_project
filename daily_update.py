@@ -46,7 +46,7 @@ def get_stock_from_api(stocksymbol):
 
     #a stockszimbolt le kell kérni napi összesítésbe + megadjuk, hogy mettől meddig
     # Fetch aggregates
-    response = client.get_aggs(stocksymbol, 7, 'day', start_date, end_date)
+    response = client.get_aggs(stocksymbol, 1, 'day', start_date, end_date)
     
 
     df = pd.DataFrame(response)
