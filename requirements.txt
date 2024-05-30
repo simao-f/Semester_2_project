@@ -10,3 +10,7 @@ ta
 features
 hopsworks
 polygon-api-client
+streamlit
+plotly
+watchdog
+tensorflow
