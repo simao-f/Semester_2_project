@@ -79,7 +79,8 @@ def train_model(stocksymbol, project):
     X_processed = preprocessor.fit_transform(X)
     
     #create sequences for LSTM - because it requires sequential data
-    sequence_length = 60  # Example sequence length
+    #the sequence lenght is just an example
+    sequence_length = 60
     X_sequences, y_sequences = [], []
     for i in range(len(X_processed) - sequence_length):
         X_sequences.append(X_processed[i:i + sequence_length])
@@ -88,14 +89,15 @@ def train_model(stocksymbol, project):
     X_sequences = np.array(X_sequences)
     y_sequences = np.array(y_sequences)
 
-    # Split data into training and testing sets
+    #split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X_sequences, y_sequences, test_size=0.2, random_state=42)
 
-    # Create and train the LSTM model
+    #create and train the LSTM model
     lstm_model = create_lstm_model((X_train.shape[1], X_train.shape[2]))
     lstm_model.fit(X_train, y_train, batch_size=32, epochs=50, validation_split=0.2)
 
-    # Evaluate the model
+    #evaluating the model
+    #we used several metrics
     predictions = lstm_model.predict(X_test)
     mse = mean_squared_error(y_test, predictions)
     y_test_classes = np.where(y_test > y_test.mean(), 1, 0)
@@ -116,43 +118,38 @@ def train_model(stocksymbol, project):
     print(f"R-squared (R²): {r2}")
     print(f"Mean Absolute Percentage Error (MAPE): {mape}")
 
-    # Save the trained model
+    #save the trained model into a .h5 file
     lstm_model.save('models/'+stocksymbol + '_lstm_model.h5')
 
-    # Define the input schema using the values of X_train
+    # Define and serialize the input and output schemas for the model using training data
     input_schema = Schema(X_train.reshape(-1, X_train.shape[2]))
-
-    # Define the output schema using y_train
     output_schema = Schema(y_train)
-
-    # Create a ModelSchema object specifying the input and output schemas
     model_schema = ModelSchema(input_schema=input_schema, output_schema=output_schema)
-
-    # Convert the model schema to a dictionary for further inspection or serialization
     model_schema.to_dict()
     
-    # Get the model registry
+    #get the model registry, so we can upload it to hopsworks
     mr = project.get_model_registry()
 
-    # Define the metrics for the model
+    #define the metrics for the model that we will use for evaluation
     metrics = {
         "mean_squared_error": mse
     }
 
-    # Create a new model in the model registry
+    #Create a new model in the model registry
     stock_model = mr.python.create_model(
-        name="lstm_stock_model_" + stocksymbol,     # Name for the model
-        metrics=metrics,                      # Metrics used for evaluation
-        model_schema=model_schema,            # Schema defining the model's input and output
-        input_example=X_sequences[0],         # Example input data for reference
-        description="Stock Predictor LSTM",  # Description of the model
+        name="lstm_stock_model_" + stocksymbol,     #name for the model
+        metrics=metrics,                      #previously defined model metrics
+        model_schema=model_schema,            #model's input and output
+        input_example=X_sequences[0],         #example input data for reference
+        description="Stock Predictor LSTM",  #description of the model
     )   
     
+    #saving the model
     stock_model.save('models/'+stocksymbol + '_lstm_model.h5')
     
     return df
 
-# Upload the data to Hopsworks feature store
+#upload the data to Hopsworks feature store
 def upload_to_hopsworks(df, project):
     
     fs = project.get_feature_store()
@@ -168,21 +165,21 @@ def upload_to_hopsworks(df, project):
     stock_fg.insert(df)
     
 
-# Login to Hopsworks, upload the trained model and the data to the feature store 
-# This is the main function. We login to hopsworks,  
+#login to Hopsworks, upload the trained model and the data to the feature store 
+#this is the main function. We login to hopsworks,  
 if __name__ == '__main__':
-    print("im alive")
+    print("starting training")
     project = hopsworks.login()
     
     dfs = []
     stocksymbols = ['AAPL', 'GOOG', 'TSLA', 'AMZN', 'MSFT', 'META', 'NVDA']
     
-    # Train models for each stock symbol
+    #rain models for each stock symtbol
     for stocksymbol in stocksymbols:
         print(f"Training model for {stocksymbol}")
         dfs.append(train_model(stocksymbol, project)) # what's appended here is the dataframe
         upload_to_hopsworks(dfs[-1], project)
     
-    # Close the connection to Hopsworks
+    #close the connection to Hopsworks
     hopsworks.Connection.close(project)
-    print("im dead")
+    print("training finished")

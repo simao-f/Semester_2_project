@@ -1,14 +1,14 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python application
+name: Stockpredict model update
 
 on:
   push:
     branches:
       - main
   schedule:
-    # * is a special character in YAML so you have to quote this string
+    #this makes the model retrain every monday at 5.30am
     - cron:  '30 5 * * 1'
 
 permissions:
