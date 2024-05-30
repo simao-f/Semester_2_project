@@ -1,3 +1,14 @@
+'''
+**2nd semester project** - training pipeline
+
+
+Elena Skrtic
+
+Simao Ferreira
+
+Laura Keri
+'''
+
 import pandas as pd
 import numpy as np
 from sklearn.pipeline import Pipeline
@@ -6,6 +17,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
 
 from hsml.schema import Schema
 from hsml.model_schema import ModelSchema
@@ -15,9 +28,8 @@ import hopsworks
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
-# from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
 
-# Function to create LSTM model
+#function defining LSTM model that we are about to us
 def create_lstm_model(input_shape):
     model = Sequential()
     model.add(LSTM(50, return_sequences=True, input_shape=input_shape))
@@ -29,45 +41,44 @@ def create_lstm_model(input_shape):
     model.compile(optimizer='adam', loss='mean_squared_error')
     return model
 
-# Train an LSTM model. stocksymbol and project are the input parameters.
+#function for training the LSTM model
 def train_model(stocksymbol, project):
         
-    # Load dataset
     df = pd.read_csv(stocksymbol+'_df.csv')
 
-    # Sanitize df columns to lowercase and to remove spaces
+    #sanitize df columns to lowercase and to remove spaces to make everything uniform
     df.columns = df.columns.str.lower().str.replace(' ', '_')
     df = df.drop(columns=['dividends', 'stock_splits'])
     df['date'] = pd.to_datetime(df['date'], utc=True)
    
-    # Define numeric features
+    #numeric features - input features
     numeric_features = [col for col in df.columns if df[col].dtype in ['int64', 'float64'] and col != 'close']
 
-    # Add stock symbol to the dataframe, so we can store all in one feature group
+    #add stock symbol to the dataframe, so we can store all in one feature group
     df['symbol'] = stocksymbol
     
-    # Create pipelines for numeric preprocessing
+    #creating pipeline
     numeric_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='median')),  # Fill missing values with median
-        ('scaler', StandardScaler())  # Scale features
+        ('imputer', SimpleImputer(strategy='median')),  #filling up missing values with median
+        ('scaler', StandardScaler())  #scaling the features
     ])
     print(numeric_features)
 
-    # Combine into a single ColumnTransformer
+    #combine the preprocessing steps for numeric features into a single ColumnTransformer
+    #this ensures that the numeric features are both imputed (missing values filled) and scaled 
     preprocessor = ColumnTransformer(
         transformers=[
             ('num', numeric_transformer, numeric_features),
         ])
 
-    # Prepare features and target variable
+    #features and target variable - our target variable is the *closing* price
     X = df[numeric_features]
     print(X.head())
     y = df['close']
     
-    # Preprocess the data
     X_processed = preprocessor.fit_transform(X)
     
-    # Create sequences for LSTM
+    #create sequences for LSTM - because it requires sequential data
     sequence_length = 60  # Example sequence length
     X_sequences, y_sequences = [], []
     for i in range(len(X_processed) - sequence_length):
@@ -87,7 +98,23 @@ def train_model(stocksymbol, project):
     # Evaluate the model
     predictions = lstm_model.predict(X_test)
     mse = mean_squared_error(y_test, predictions)
+    y_test_classes = np.where(y_test > y_test.mean(), 1, 0)
+    predictions_classes = np.where(predictions > predictions.mean(), 1, 0)
+    accuracy = accuracy_score(y_test_classes, predictions_classes)
+    f1 = f1_score(y_test_classes, predictions_classes, average='weighted')
+    mae = mean_absolute_error(y_test, predictions)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test, predictions)
+    mape = mean_absolute_percentage_error(y_test, predictions)
+    
     print(f"Mean Squared Error: {mse}")
+    print(f"Accuracy: {accuracy}")
+    print(f"F1 Score: {f1}")
+    print(f"Mean Squared Error (MSE): {mse}")
+    print(f"Mean Absolute Error (MAE): {mae}")
+    print(f"Root Mean Squared Error (RMSE): {rmse}")
+    print(f"R-squared (R²): {r2}")
+    print(f"Mean Absolute Percentage Error (MAPE): {mape}")
 
     # Save the trained model
     lstm_model.save('models/'+stocksymbol + '_lstm_model.h5')
