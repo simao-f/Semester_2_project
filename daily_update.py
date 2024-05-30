@@ -29,8 +29,8 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# # Load environment variables from .env file
+# load_dotenv("api.env")
 
 # Retrieve the API key from environment variables
 POLYGON_API_KEY = os.getenv('POLYGON_API_KEY')
@@ -51,7 +51,6 @@ def get_stock_from_api(stocksymbol):
 
     df = pd.DataFrame(response)
     
-    print(df.columns)
     
     #ezt csak azért, hogy ugyanaz legyen, mint trainingbe (ez a transform része)
     # Rename the columns
@@ -85,7 +84,6 @@ def update_model_with_fresh_data(df, stocksymbol):
     
     X = df[numeric_features]
     y = df['close']
-    print(X.head())
     # Load the model
     #betöltjük a lementett modelt
     
@@ -109,7 +107,7 @@ def update_model_with_fresh_data(df, stocksymbol):
     # Create sequences for LSTM
     sequence_length = 60  # Example sequence length
     X_sequences, y_sequences = [], []
-    for i in range(len(X_processed) ):
+    for i in range(len(X_processed) - sequence_length ):
         X_sequences.append(X_processed[i:i + sequence_length])
         y_sequences.append(y[i + sequence_length])
 
